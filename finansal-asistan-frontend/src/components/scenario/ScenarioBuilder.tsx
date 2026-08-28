@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { UserFinancialProfile, LoanType } from "@/types/finansal";
@@ -15,6 +15,9 @@ export default function ScenarioBuilder({ baseProfile, onProfileChange, onAddCus
     const [incomePct, setIncomePct] = useState(0);
     const [expensePct, setExpensePct] = useState(0);
 
+    // Bileşen ilk yüklendiğindeki orijinal değerleri sakla (kıyaslama referansı)
+    const originalProfile = useRef(baseProfile);
+
     function field<K extends keyof UserFinancialProfile>(key: K, value: string) {
         const parsed = value === "" ? 0 : Number(value);
         onProfileChange({ ...baseProfile, [key]: parsed });
@@ -22,6 +25,29 @@ export default function ScenarioBuilder({ baseProfile, onProfileChange, onAddCus
 
     const newIncome = Math.round(baseProfile.monthlyIncome * (1 + incomePct / 100));
     const newExpense = Math.round(baseProfile.monthlyExpenses * (1 + expensePct / 100));
+
+    // Üstteki kutulardan elle yapılan değişikliği, orijinale göre yüzdeye çevir
+    function manualPct(current: number, original: number): number {
+        if (original === 0) return current === 0 ? 0 : 100;
+        return Math.round(((current - original) / original) * 100);
+    }
+
+    const manualIncomePct = manualPct(baseProfile.monthlyIncome, originalProfile.current.monthlyIncome);
+    const manualExpensePct = manualPct(baseProfile.monthlyExpenses, originalProfile.current.monthlyExpenses);
+
+    // Slider'dan mı, üstteki kutudan mı değişiklik var — hangisi varsa onu kullan
+    const effectiveIncomePct = incomePct !== 0 ? incomePct : manualIncomePct;
+    const effectiveExpensePct = expensePct !== 0 ? expensePct : manualExpensePct;
+
+    const canAddScenario = effectiveIncomePct !== 0 || effectiveExpensePct !== 0;
+
+    function handleAddScenario() {
+        onAddCustomScenario(effectiveIncomePct, effectiveExpensePct);
+        setIncomePct(0);
+        setExpensePct(0);
+        // Yeni eklenen senaryo sonrası referansı güncelle ki bir sonraki kıyaslama sıfırdan başlasın
+        originalProfile.current = baseProfile;
+    }
 
     return (
         <div className="space-y-4">
@@ -126,12 +152,17 @@ export default function ScenarioBuilder({ baseProfile, onProfileChange, onAddCus
                 </div>
 
                 <Button
-                    onClick={() => { onAddCustomScenario(incomePct, expensePct); setIncomePct(0); setExpensePct(0); }}
-                    disabled={incomePct === 0 && expensePct === 0}
+                    onClick={handleAddScenario}
+                    disabled={!canAddScenario}
                     className="w-full"
                 >
                     + Senaryo olarak ekle
                 </Button>
+                {!canAddScenario && (
+                    <p className="text-xs text-[var(--text-muted)] mt-2 text-center">
+                        Senaryo eklemek için gelir/gider kaydırıcılarını ya da yukarıdaki gelir/gider alanlarını değiştir.
+                    </p>
+                )}
             </Card>
         </div>
     );
