@@ -1,0 +1,18 @@
+﻿# .NET (backend + model-training)
+bin/
+obj/
+*.user
+.vs/
+
+# Rider / JetBrains
+.idea/
+
+# Node (frontend)
+node_modules/
+.next/
+.env*
+!.env.example
+
+# Diğer
+*.log
+.DS_Store

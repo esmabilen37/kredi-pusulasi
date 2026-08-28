@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinansalAsistanApi", "FinansalAsistanApi\FinansalAsistanApi.csproj", "{09BB4EA6-95B2-4108-B2A9-914716F2BE30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinansalAsistanApi.Tests", "FinansalAsistanApi.Tests\FinansalAsistanApi.Tests.csproj", "{7C22641F-7C31-4DB7-A192-64C7E7F56886}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09BB4EA6-95B2-4108-B2A9-914716F2BE30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09BB4EA6-95B2-4108-B2A9-914716F2BE30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09BB4EA6-95B2-4108-B2A9-914716F2BE30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09BB4EA6-95B2-4108-B2A9-914716F2BE30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C22641F-7C31-4DB7-A192-64C7E7F56886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C22641F-7C31-4DB7-A192-64C7E7F56886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C22641F-7C31-4DB7-A192-64C7E7F56886}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C22641F-7C31-4DB7-A192-64C7E7F56886}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
