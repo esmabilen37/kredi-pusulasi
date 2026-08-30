@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using DnsClient;
 using FinansalAsistanApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -20,6 +21,8 @@ public class AuthService : IAuthService
 
     public async Task<(AuthResponseDto Response, string RefreshToken)> RegisterAsync(RegisterRequestDto request)
     {
+        await ValidateEmailDomainAsync(request.Email);
+
         var existing = await _context.Users
             .Find(u => u.Email == request.Email)
             .FirstOrDefaultAsync();
@@ -53,12 +56,11 @@ public class AuthService : IAuthService
 
         return await IssueTokensAsync(user);
     }
+
     public async Task<(AuthResponseDto Response, string RefreshToken)> RefreshAsync(string refreshToken)
     {
-       
         var userId = ValidateRefreshTokenAndGetUserId(refreshToken);
 
-        
         var user = await _context.Users
             .Find(u => u.Id == userId)
             .FirstOrDefaultAsync();
@@ -68,7 +70,6 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Geçersiz oturum, lütfen tekrar giriş yapın.");
         }
 
-        
         if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
         {
             throw new UnauthorizedAccessException("Oturum süresi dolmuş, lütfen tekrar giriş yapın.");
@@ -78,8 +79,59 @@ public class AuthService : IAuthService
         {
             throw new UnauthorizedAccessException("Geçersiz oturum, lütfen tekrar giriş yapın.");
         }
-        
+
         return await IssueTokensAsync(user);
+    }
+
+    public async Task LogoutAsync(string? refreshToken)
+    {
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return;
+        }
+
+        try
+        {
+            var userId = ValidateRefreshTokenAndGetUserId(refreshToken);
+
+            var update = Builders<User>.Update
+                .Set(u => u.RefreshTokenHash, null)
+                .Set(u => u.RefreshTokenExpiresAt, null);
+
+            await _context.Users.UpdateOneAsync(u => u.Id == userId, update);
+        }
+        catch
+        {
+            
+        }
+    }
+
+    private async Task ValidateEmailDomainAsync(string email)
+    {
+        var domain = email.Split('@').LastOrDefault();
+        if (string.IsNullOrWhiteSpace(domain))
+        {
+            throw new InvalidOperationException("Geçerli bir e-posta adresi girin.");
+        }
+
+        try
+        {
+            var lookup = new LookupClient();
+            var result = await lookup.QueryAsync(domain, QueryType.MX);
+
+            if (!result.Answers.Any())
+            {
+                throw new InvalidOperationException("Bu e-posta adresinin sağlayıcısı geçersiz görünüyor.");
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            
+        }
     }
 
     private async Task<(AuthResponseDto Response, string RefreshToken)> IssueTokensAsync(User user)
@@ -87,7 +139,6 @@ public class AuthService : IAuthService
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken(user);
 
-        // Refresh tokenı hashleyip veritabanına kaydetme
         user.RefreshTokenHash = BCrypt.Net.BCrypt.HashPassword(refreshToken);
         var refreshExpireDays = int.Parse(_configuration["Jwt:RefreshExpireDays"] ?? "7");
         user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshExpireDays);

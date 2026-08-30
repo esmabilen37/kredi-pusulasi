@@ -7,7 +7,7 @@ import {
     AssistantResponseDto,
 } from "@/types/finansal";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5142";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5142";
 
 // Tüm istekler cookie taşımalı (accessToken/refreshToken backend'e otomatik gitsin diye)
 const defaultOptions: RequestInit = { credentials: "include" };

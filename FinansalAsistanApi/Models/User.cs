@@ -15,4 +15,7 @@ public class User
 
     public string? RefreshTokenHash { get; set; }
     public DateTime? RefreshTokenExpiresAt { get; set; }
+
+    public string? PasswordResetTokenHash { get; set; }
+    public DateTime? PasswordResetTokenExpiresAt { get; set; }
 }
