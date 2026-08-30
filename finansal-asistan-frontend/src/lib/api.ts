@@ -9,13 +9,36 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5142";
 
-// Tüm istekler cookie taşımalı (accessToken/refreshToken backend'e otomatik gitsin diye)
+
 const defaultOptions: RequestInit = { credentials: "include" };
+
+
+async function fetchWithAuthRetry(url: string, options: RequestInit): Promise<Response> {
+    const res = await fetch(url, options);
+
+    if (res.status !== 401) {
+        return res;
+    }
+
+    
+    const refreshRes = await fetch(`${API_BASE}/api/Auth/refresh`, {
+        ...defaultOptions,
+        method: "POST",
+    });
+
+    if (!refreshRes.ok) {
+       
+        return res;
+    }
+
+    
+    return fetch(url, options);
+}
 
 export async function evaluateAffordability(
     profile: UserFinancialProfile
 ): Promise<AffordabilityResult> {
-    const res = await fetch(`${API_BASE}/api/Affordability/evaluate`, {
+    const res = await fetchWithAuthRetry(`${API_BASE}/api/Affordability/evaluate`, {
         ...defaultOptions,
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,7 +49,7 @@ export async function evaluateAffordability(
 }
 
 export async function runScenarios(request: ScenarioRequestDto): Promise<ScenarioResult[]> {
-    const res = await fetch(`${API_BASE}/api/Affordability/scenarios`, {
+    const res = await fetchWithAuthRetry(`${API_BASE}/api/Affordability/scenarios`, {
         ...defaultOptions,
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,7 +60,7 @@ export async function runScenarios(request: ScenarioRequestDto): Promise<Scenari
 }
 
 export async function sendAssistantMessage(messages: ChatMessage[]): Promise<AssistantResponseDto> {
-    const res = await fetch(`${API_BASE}/api/Assistant/message`, {
+    const res = await fetchWithAuthRetry(`${API_BASE}/api/Assistant/message`, {
         ...defaultOptions,
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -47,7 +70,7 @@ export async function sendAssistantMessage(messages: ChatMessage[]): Promise<Ass
     return res.json();
 }
 
-// ---- Auth fonksiyonları ----
+
 
 interface AuthResponse {
     email: string;
